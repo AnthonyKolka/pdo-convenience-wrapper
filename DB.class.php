@@ -69,7 +69,7 @@ class DB {
 			$this->errormsg();
 			return false;
 		}
-    	return $this->sth->rowCount();
+		return $this->sth->rowCount();
 	}
 
   public function execAll($values, $mode = null)
