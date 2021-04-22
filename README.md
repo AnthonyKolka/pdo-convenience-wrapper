@@ -68,7 +68,7 @@ $count = $dbo->update($table, $data[, $where = 'id']);
 
 #### example
 ```php
-$count = $dbo->update('users', ['id''id' => 201, 'name' => 'Frank']);
+$count = $dbo->update('users', ['id' => 201, 'name' => 'Frank']);
 ```
 
 ## Testing for an error after running a statement
