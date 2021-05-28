@@ -8,15 +8,15 @@ class DB {
 	 *http://handynetworks.com
 	 */
 	private $dbh;
-	public  $error = null;
-	public	$debug = null;
+	public  $error = false;
+	public	$errorString;
 	private $sth;
 	
 	private $sqlCache = [];
 
 	public function __construct($host, $user, $pass, $db, $type='mysql')
 	{
-		$dsn = $type . ':Server=' . $host .';Database=' . $db;
+		$dsn = "$type:Server=$host;Database=$db";
 		$options = [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION];
 		try
 		{
@@ -24,11 +24,8 @@ class DB {
 		}
 		catch(PDOException $e)
 		{
-			$this->error = $e->getMessage();
-			$this->errormsg();
-			return false;
+			$this->seterror($e->getMessage());
 		}
-		return true;
 	}
 	
 	function __destruct()
@@ -49,8 +46,8 @@ class DB {
 		}
 		catch(PDOException $e)
 		{
-			$this->error = $e->getMessage();
-			$this->errormsg();
+			$this->seterror($e->getMessage());
+			
 			return false;
 		}
 		return true;
@@ -65,8 +62,8 @@ class DB {
 		}
 		catch(PDOException $e)
 		{
-			$this->error = $e->getMessage();
-			$this->errormsg();
+			$this->seterror($e->getMessage());
+			
 			return false;
 		}
 		return $this->sth->rowCount();
@@ -80,8 +77,8 @@ class DB {
 		}
 		catch(PDOException $e)
 		{
-			$this->error = $e->getMessage();
-			$this->errormsg();
+			$this->seterror($e->getMessage());
+			
 			return false;
 		}
 		try
@@ -90,8 +87,8 @@ class DB {
 		}
 		catch(PDOException $e)
 		{
-			$this->error = $e->getMessage();
-			$this->errormsg();
+			$this->seterror($e->getMessage());
+			
 			return false;
 		}
 		return $result;
@@ -112,8 +109,8 @@ class DB {
 		}
 		catch(PDOException $e)
 		{
-			$this->error = $e->getMessage();
-			$this->errormsg();
+			$this->seterror($e->getMessage());
+			
 			return false;
 		}
 		$this->finish();
@@ -122,7 +119,7 @@ class DB {
 
 	public function prepare($sql, $returnSth=false)
 	{
-		$this->error = null;
+		$this->error = false;
 		try
 		{
 			if($returnSth)
@@ -136,8 +133,8 @@ class DB {
 		}
 		catch(PDOException $e)
 		{
-			$this->error = $e->getMessage();
-			$this->errormsg();
+			$this->seterror($e->getMessage());
+			
 			return false;
 		}
 		return true;
@@ -146,7 +143,7 @@ class DB {
 	private function prepex($sql, $values = null)
 	{
 		//prepares and executes statement
-		$this->error = null;
+		$this->error = false;
 		$this->prepare($sql);
 		$this->execute($values);
 	}
@@ -188,8 +185,8 @@ class DB {
 		}
 		catch(PDOException $e)
 		{
-			$this->error = $e->getMessage();
-			$this->errormsg();
+			$this->seterror($e->getMessage());
+			
 			return false;
 		}
 		$this->finish();
@@ -206,8 +203,8 @@ class DB {
 		}
 		catch(PDOException $e)
 		{
-			$this->error = $e->getMessage();
-			$this->errormsg();
+			$this->seterror($e->getMessage());
+			
 			return false;
 		}
 		$this->finish();
@@ -385,19 +382,24 @@ class DB {
 
 	private function errormsg($values=null)
 	{
-		$msg = $this->error . ' SQL: ' . $this->sth->queryString;
+		$msg = $this->errorString;
+		if(!empty($this->sth) && property_exists($this->sth, 'queryString'))
+		{
+			$msg .= ' SQL: ' . $this->sth->queryString;
+		}
 		trigger_error($msg, E_USER_WARNING);
-		error_log(print_r(debug_backtrace(), TRUE));
+		error_log(print_r(debug_backtrace(), true));
 		if(!is_null($values))
 		{
-			error_log(print_r($values, TRUE));
+			error_log(print_r($values, true));
 		}
 	}
 	
-	private function setError($message)
+	private function setError($message, $values=null)
 	{
 		$this->error = true;
-		$this->errormsg = $message;
+		$this->errorString = $message;
+		$this->errormsg($values);
 	}
 
 }
